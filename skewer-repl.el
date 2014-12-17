@@ -39,7 +39,7 @@ buffer.")
 
 (defun skewer-repl-process ()
   "Return the process for the skewer REPL."
-  (get-buffer-process (current-buffer)))
+  (get-process "skewer-repl"))
 
 (defface skewer-repl-log-face
   '((((class color) (background light))
@@ -58,9 +58,12 @@ buffer.")
         comint-process-echoes nil)
   (unless (comint-check-proc (current-buffer))
     (insert skewer-repl-welcome)
-    (start-process "skewer-repl" (current-buffer) nil)
+    (if (process-live-p (skewer-repl-process))
+	(set-process-buffer (skewer-repl-process) (current-buffer))
+      (start-process "skewer-repl" (current-buffer) nil))
     (set-process-query-on-exit-flag (skewer-repl-process) nil)
     (goto-char (point-max))
+    (comint-set-process-mark)
     (set (make-local-variable 'comint-inhibit-carriage-motion) t)
     (comint-output-filter (skewer-repl-process) skewer-repl-prompt)
     (set-process-filter (skewer-repl-process) 'comint-output-filter)))
